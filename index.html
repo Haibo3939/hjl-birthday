@@ -1,0 +1,791 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HJL 生日派对</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Fonts ship with the site (Google Fonts is blocked in mainland China); build/make_dist.sh subsets the headline face. */
+@font-face { font-family: "ZCOOL QingKe HuangYou"; src: url("fonts/zcool-qingke-huangyou.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Pixelify Sans"; src: url("fonts/pixelify-sans.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+/* Layout: one column party night — headline, the live pixel stage with its act buttons, the catch game, then the take-home pets. */
+:root {
+  color-scheme: dark;
+  --night: #1a1430;     /* party-room plum night */
+  --plum: #2b2147;      /* raised panels, the stage frame */
+  --edge: #0d0a18;      /* pixel outlines and hard shadows */
+  --ink: #fff3dc;       /* warm paper text */
+  --dim: #b9aecf;
+  --candle: #ffc94a;    /* HJL's strap yellow, candle flames */
+  --berry: #e5483e;     /* strap red, LILI's shirt */
+  --mint: #6fdcbf;
+  --f-display: "ZCOOL QingKe HuangYou", "Noto Sans SC", "PingFang SC", sans-serif;
+  --f-pixel: "Pixelify Sans", "Courier New", monospace;
+  --f-body: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--night); color: var(--ink); font: 16px/1.7 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+main { max-width: 920px; margin: 0 auto; display: grid; gap: 64px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2 { text-wrap: balance; font-family: var(--f-display); font-weight: 400; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
+
+/* ---------- hero ---------- */
+.hero { display: grid; gap: 14px; }
+.hero h1 { font-size: clamp(40px, 9vw, 84px); line-height: .95; color: var(--candle); text-shadow: 4px 4px 0 var(--berry), 8px 8px 0 var(--edge); }
+.hero h1.cheer { animation: cheer .9s steps(6) 2; }
+@keyframes cheer { 0%, 100% { transform: none; } 33% { transform: translateY(-6px) rotate(-1.5deg); } 66% { transform: translateY(2px) rotate(1deg); } }
+
+/* ---------- stage ---------- */
+.stage-block { display: grid; gap: 16px; }
+.stage {
+  position: relative; border: 4px solid var(--edge); background: var(--edge);
+  box-shadow: 0 8px 0 var(--edge), inset 0 0 0 4px var(--plum);
+}
+.stage canvas, .game canvas, .pet canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+#scene { aspect-ratio: 2 / 1; cursor: pointer; touch-action: manipulation; }
+.bubble {
+  position: absolute; max-width: min(46%, 260px); padding: 7px 11px 6px;
+  background: var(--ink); color: var(--edge); border: 3px solid var(--edge);
+  font: 15px/1.35 var(--f-display); box-shadow: 0 3px 0 var(--edge); pointer-events: none;
+  transform: translate(var(--tx, -50%), -100%); z-index: 2;
+}
+.bubble::after {
+  content: ""; position: absolute; bottom: -9px; left: var(--tail, 50%); width: 10px; height: 10px;
+  background: var(--ink); border-right: 3px solid var(--edge); border-bottom: 3px solid var(--edge);
+  transform: translateX(-50%) rotate(45deg);
+}
+.acts { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.px-btn {
+  font: 20px/1 var(--f-display); padding: 11px 16px 10px; cursor: pointer;
+  background: var(--candle); color: var(--edge); border: 3px solid var(--edge); box-shadow: 0 5px 0 var(--edge);
+  transition: transform .05s, box-shadow .05s;
+}
+.px-btn.alt { background: var(--mint); }
+.px-btn.hot { background: var(--berry); color: var(--ink); }
+.px-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--edge); }
+.px-btn:disabled { filter: grayscale(.7) brightness(.7); cursor: default; }
+.sound { margin-left: auto; font: 700 13px/1 var(--f-pixel); letter-spacing: .06em; padding: 9px 11px; background: var(--plum); color: var(--dim); border: 2px solid var(--edge); box-shadow: 0 3px 0 var(--edge); cursor: pointer; }
+.sound[aria-pressed="true"] { color: var(--mint); }
+.hint { color: var(--dim); font-size: 14px; }
+
+/* ---------- sections ---------- */
+section { display: grid; gap: 18px; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head h2 { font-size: clamp(30px, 6vw, 44px); line-height: 1.05; color: var(--ink); }
+.sec-head h2 em { font-style: normal; color: var(--candle); }
+.sec-head p { color: var(--dim); max-width: 60ch; }
+
+/* ---------- game ---------- */
+.game-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 18px; align-items: start; }
+.game { position: relative; border: 4px solid var(--edge); box-shadow: 0 8px 0 var(--edge); background: var(--edge); }
+#game { aspect-ratio: 4 / 3; touch-action: none; }
+.overlay {
+  position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center;
+  background: rgb(13 10 24 / .72); padding: 16px;
+}
+.overlay h3 { font: 34px/1.1 var(--f-display); color: var(--candle); }
+.overlay p { color: var(--ink); max-width: 30ch; font-size: 15px; }
+.game .bubble { font-size: 14px; }
+.hud { display: grid; gap: 12px; }
+.stat { background: var(--plum); border: 3px solid var(--edge); box-shadow: 0 4px 0 var(--edge); padding: 10px 12px 8px; display: grid; gap: 2px; }
+.stat b { font: 700 12px/1 var(--f-pixel); letter-spacing: .1em; color: var(--dim); text-transform: uppercase; }
+.stat span { font: 700 30px/1.1 var(--f-pixel); font-variant-numeric: tabular-nums; color: var(--candle); }
+.lives { display: flex; gap: 6px; padding-top: 4px; }
+.lives i { width: 18px; height: 16px; background: var(--berry); display: block;
+  clip-path: polygon(0 22%, 22% 0, 50% 22%, 78% 0, 100% 22%, 100% 50%, 50% 100%, 0 50%); }
+.lives i.gone { background: #4a3d66; }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; color: var(--dim); }
+.legend li { display: flex; gap: 8px; align-items: center; }
+.legend canvas { width: 20px; height: 20px; image-rendering: pixelated; }
+.pad { display: none; gap: 12px; }
+.pad .px-btn { flex: 1; font-size: 26px; padding-block: 14px; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+/* ---------- take-home pets ---------- */
+.pets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.pet { background: var(--plum); border: 4px solid var(--edge); box-shadow: 0 8px 0 var(--edge); padding: 18px; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 18px; align-items: start; }
+.pet .win { background: repeating-conic-gradient(#352a55 0 25%, #2f2550 0 50%) 0 0 / 12px 12px; border: 3px solid var(--edge); }
+.pet .win small { display: block; text-align: center; font: 700 11px/1 var(--f-pixel); letter-spacing: .08em; color: var(--dim); padding: 6px 0 5px; background: var(--edge); }
+.pet h3 { font: 700 30px/1 var(--f-pixel); letter-spacing: .04em; }
+.pet.hjl h3 { color: var(--candle); } .pet.lili h3 { color: var(--berry); }
+.pet .body { display: grid; gap: 10px; min-width: 0; }
+.pet p { color: var(--dim); font-size: 14px; }
+.pet dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; font-size: 14px; }
+.pet dt { color: var(--dim); }
+.pet dd { margin: 0; }
+.pet .status { font-size: 13px; color: var(--mint); min-height: 1.4em; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: baseline; color: var(--ink); }
+.steps li::before { content: counter(s); font: 700 20px/1 var(--f-pixel); color: var(--edge); background: var(--mint); border: 2px solid var(--edge); text-align: center; padding: 5px 0 3px; }
+.steps code { font-size: 13px; background: var(--plum); padding: 1px 6px; border: 1px solid var(--edge); }
+.note { color: var(--dim); font-size: 14px; }
+footer { color: var(--dim); font: 700 13px/1.6 var(--f-pixel); letter-spacing: .06em; text-align: right; }
+
+@media (max-width: 760px) {
+  .game-wrap { grid-template-columns: 1fr; }
+  .hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hud .legend { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pad { display: flex; }
+  .pets { grid-template-columns: 1fr; }
+  .bubble { font-size: 13px; padding: 5px 8px 4px; }
+}
+@media (max-width: 420px) {
+  .pet { grid-template-columns: 96px minmax(0, 1fr); padding: 14px; gap: 14px; }
+  .sound { margin-left: 0; }
+}
+@media (hover: none) { .pad { display: flex; } }
+</style>
+
+<main>
+  <header class="hero">
+    <!-- 改这里：生日标题 -->
+    <h1 id="headline">得是有狗日的过生日嘞？</h1>
+  </header>
+
+  <section class="stage-block" aria-labelledby="stage-h">
+    <h2 id="stage-h" hidden>派对舞台</h2>
+    <div class="stage" id="stage">
+      <canvas id="scene" width="240" height="120" aria-label="像素派对舞台：HJL 和 LILI 站在生日蛋糕两边"></canvas>
+      <div class="bubble" id="bub-hjl" hidden></div>
+      <div class="bubble" id="bub-lili" hidden></div>
+    </div>
+    <div class="acts">
+      <button class="px-btn" id="act-play" type="button">请寿星弹一首</button>
+      <button class="px-btn hot" id="act-solo" type="button">跪地激情 solo</button>
+      <button class="px-btn alt" id="act-cake" type="button">吹蜡烛</button>
+      <button class="sound" id="sound" type="button" aria-pressed="true">♪ 声音 开</button>
+    </div>
+    <p class="hint">也可以直接点他们俩。把鼠标移到舞台上，他们会转头看你。</p>
+  </section>
+
+  <section aria-labelledby="game-h">
+    <div class="sec-head">
+      <h2 id="game-h">寿星<em>接蛋糕</em></h2>
+      <p>左右移动 HJL，接住掉下来的蛋糕、音符和礼物。LILI 在旁边一边敲键盘一边扔怒气，被砸中三次就结束。分数够高，LILI 会心软。</p>
+    </div>
+    <div class="game-wrap">
+      <div>
+        <div class="game" id="game-box">
+          <canvas id="game" width="240" height="180" aria-label="接蛋糕小游戏"></canvas>
+          <div class="bubble" id="bub-game" hidden></div>
+          <div class="overlay" id="overlay">
+            <h3 id="ov-title">准备好了吗？</h3>
+            <p id="ov-text">电脑上用 ← → 或 A D，手机上按下面的按钮，鼠标在画面里移动也行。</p>
+            <button class="px-btn" id="start" type="button">开始</button>
+          </div>
+        </div>
+        <div class="pad" style="margin-top:16px">
+          <button class="px-btn alt" id="pad-l" type="button" aria-label="向左">◀</button>
+          <button class="px-btn alt" id="pad-r" type="button" aria-label="向右">▶</button>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="stat"><b>得分</b><span id="score">0</span></div>
+        <div class="stat"><b>最高</b><span id="best">0</span></div>
+        <div class="stat"><b>生命</b><div class="lives" id="lives"><i></i><i></i><i></i></div></div>
+        <ul class="legend" id="legend"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="pets-h">
+    <div class="sec-head">
+      <h2 id="pets-h">把他们带回<em>你的 Codex</em></h2>
+      <p>两个都是 Codex 桌面宠物。装上以后，它们会住在 Codex 窗口角落，跟着你的任务一起干活。</p>
+    </div>
+    <div class="pets">
+      <article class="pet hjl">
+        <div class="win"><canvas id="pv-hjl" width="48" height="52" aria-label="HJL 动画预览"></canvas><small id="pv-hjl-label">待机</small></div>
+        <div class="body">
+          <h3>HJL</h3>
+          <p>扎小发髻、留长发和络腮胡，背着吉他的寿星本人。</p>
+          <dl>
+            <dt>干活时</dt><dd>忘情地弹吉他</dd>
+            <dt>任务完成</dt><dd>跪地激情 solo</dd>
+            <dt>出错了</dt><dd>拄着球杆叹气</dd>
+          </dl>
+          <button class="px-btn" type="button" data-pack="hjl">下载 HJL</button>
+          <p class="status" id="st-hjl" aria-live="polite"></p>
+        </div>
+      </article>
+      <article class="pet lili">
+        <div class="win"><canvas id="pv-lili" width="48" height="52" aria-label="LILI 动画预览"></canvas><small id="pv-lili-label">待机</small></div>
+        <div class="body">
+          <h3>LILI</h3>
+          <p>皱着眉、嘴角往下撇的中年网红，偶尔也会害羞地比个心。</p>
+          <dl>
+            <dt>干活时</dt><dd>怒敲键盘</dd>
+            <dt>任务完成</dt><dd>隔着屏幕指着你</dd>
+            <dt>出错了</dt><dd>直接摔电脑</dd>
+            <dt>鼠标放上去</dt><dd>给你发一根烟</dd>
+          </dl>
+          <button class="px-btn hot" type="button" data-pack="lili">下载 LILI</button>
+          <p class="status" id="st-lili" aria-live="polite"></p>
+        </div>
+      </article>
+    </div>
+    <ol class="steps">
+      <li><span>解压下载的压缩包。</span></li>
+      <li><span>双击里面的「安装 HJL.command」或「安装 LILI.command」。如果提示来自身份不明的开发者，右键点它，选「打开」。</span></li>
+      <li><span>重启 Codex，打开 设置 → Mini &amp; Pets，在 My pets 里选中它。</span></li>
+    </ol>
+    <p class="note">需要 Mac 上的 Codex 桌面应用（新版叫 ChatGPT）。也可以手动把压缩包里的 <code>hjl</code> 或 <code>lili</code> 文件夹拷进 <code>~/.codex/pets/</code>。</p>
+  </section>
+
+  <footer>MADE WITH ♥ FOR 坏坏</footer>
+</main>
+
+<script src="hjl-sprite.js"></script>
+<script src="lili-sprite.js"></script>
+<script src="pets-data.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+  };
+  const C = { night: '#1a1430', plum: '#2b2147', edge: '#0d0a18', ink: '#fff3dc', candle: '#ffc94a', berry: '#e5483e', mint: '#6fdcbf', lilac: '#8f7cf0', pink: '#ff8fb8' };
+
+  // ---------- character sprites (both rigs share the 48x52 grid) ----------
+  const RIGS = { hjl: { rig: window.HJL, outfit: 'polo' }, lili: { rig: window.LILI, outfit: 'red' } };
+  const cache = new Map();
+  function sprite(who, anim, i) {
+    const key = who + ':' + anim + ':' + i;
+    let c = cache.get(key);
+    if (!c) {
+      const { rig, outfit } = RIGS[who];
+      c = document.createElement('canvas');
+      rig.paint(c, rig.render(rig.anims[anim].frames[i], outfit));
+      cache.set(key, c);
+    }
+    return c;
+  }
+
+  class Actor {
+    constructor(who, x, y) { Object.assign(this, { who, x, y, anim: 'idle', i: 0, t: 0, loops: Infinity, done: null, look: null }); }
+    get anims() { return RIGS[this.who].rig.anims; }
+    act(anim, loops = 1) {
+      this.finish(false);
+      Object.assign(this, { anim, i: 0, t: 0, loops });
+      return new Promise((r) => { this.done = r; });
+    }
+    loop(anim) { // ambient loop; never overrides a scripted act
+      if (this.done || this.anim === anim) return;
+      Object.assign(this, { anim, i: 0, t: 0, loops: Infinity });
+    }
+    finish(ok) { const d = this.done; this.done = null; if (d) d(ok); }
+    moveTo(x, ms) { // slide horizontally while whatever animation is set keeps playing
+      return new Promise((r) => { this.tween = { from: this.x, to: x, t: 0, ms, r }; });
+    }
+    update(dt) {
+      if (this.tween) {
+        const tw = this.tween; tw.t = Math.min(tw.ms, tw.t + dt);
+        this.x = Math.round(tw.from + (tw.to - tw.from) * (tw.t / tw.ms));
+        if (tw.t >= tw.ms) { this.tween = null; tw.r(); }
+      }
+      const ms = this.anims[this.anim].ms;
+      this.t += dt;
+      while (this.t >= ms[this.i]) {
+        this.t -= ms[this.i];
+        if (++this.i >= ms.length) {
+          this.i = 0;
+          if (--this.loops <= 0) { Object.assign(this, { anim: 'idle', loops: Infinity }); this.finish(true); return; }
+        }
+      }
+    }
+    image() {
+      if (this.anim === 'idle' && this.look != null) return sprite(this.who, this.look < 8 ? 'lookA' : 'lookB', this.look % 8);
+      return sprite(this.who, this.anim, this.i);
+    }
+    lookAt(px, py) { // Codex-style 16-way look, with an idle dead zone around the face
+      const dx = px - (this.x + 24), dy = py - (this.y + 18);
+      if (Math.hypot(dx, dy) < 14) { this.look = null; return; }
+      const deg = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+      this.look = Math.round(deg / 22.5) % 16;
+    }
+  }
+
+  // ---------- tiny pixel art for props ----------
+  function pixelArt(rows, pal, outline) {
+    const h = rows.length, w = rows[0].length, o = outline ? 1 : 0;
+    const c = document.createElement('canvas'); c.width = w + 2 * o; c.height = h + 2 * o;
+    const x = c.getContext('2d');
+    if (outline) {
+      x.fillStyle = outline;
+      rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch !== '.') for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) x.fillRect(i + o + a, j + o + b, 1, 1); }));
+    }
+    rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch !== '.') { x.fillStyle = pal[ch]; x.fillRect(i + o, j + o, 1, 1); } }));
+    return c;
+  }
+  const ART = {
+    cake: pixelArt(['....r.....', '...ppp....', '..ppppp...', '.ppppppp..', 'cccccccccc', 'cscccscccs', 'cccccccccc', 'cscccscccs'],
+      { r: C.berry, p: C.pink, c: '#fff1d6', s: '#f07aa0' }, C.edge),
+    note: pixelArt(['..yyyy', '..y..y', '..y..y', '..y..y', 'yyy.yy', 'yyy.yy', '.y....'], { y: C.candle }, C.edge),
+    gift: pixelArt(['..y.y..', '...y...', 'bbbybbb', 'bbbybbb', 'yyyyyyy', 'bbbybbb', 'bbbybbb', 'bbbybbb'], { y: C.candle, b: C.mint }, C.edge),
+    anger: pixelArt(['.rr.rr.', 'r..r..r', 'r.....r', '.r...r.', 'r.....r', 'r..r..r', '.rr.rr.'], { r: '#ff3b30' }, C.ink),
+    heart: pixelArt(['.hh.hh.', 'hhhhhhh', 'hhhhhhh', '.hhhhh.', '..hhh..', '...h...'], { h: C.pink }, C.edge),
+    musicNote: pixelArt(['..xx', '..x.', '..x.', 'xxx.', 'xxx.'], { x: C.candle }),
+  };
+
+  // ---------- sound: tiny square-wave synth, only ever started by a click ----------
+  let soundOn = store.get('hjl-party-sound', true), audio = null;
+  const soundBtn = $('#sound');
+  function syncSound() { soundBtn.setAttribute('aria-pressed', String(soundOn)); soundBtn.textContent = soundOn ? '♪ 声音 开' : '♪ 声音 关'; }
+  soundBtn.addEventListener('click', () => { soundOn = !soundOn; store.set('hjl-party-sound', soundOn); syncSound(); if (!soundOn && audio) audio.suspend(); });
+  syncSound();
+  function ac() {
+    if (!soundOn) return null;
+    if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  }
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  function tone(midi, at, dur, type = 'square', vol = 0.05) {
+    const a = ac(); if (!a) return;
+    const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + at;
+    o.type = type; o.frequency.value = hz(midi);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function play(seq, bpm, type, vol) { const beat = 60 / bpm; let t = 0; for (const [m, b] of seq) { if (m) tone(m, t, b * beat * 0.9, type, vol); t += b * beat; } }
+  const HAPPY_BIRTHDAY = [[67, .75], [67, .25], [69, 1], [67, 1], [72, 1], [71, 2], [67, .75], [67, .25], [69, 1], [67, 1], [74, 1], [72, 2],
+    [67, .75], [67, .25], [79, 1], [76, 1], [72, 1], [71, 1], [69, 2], [77, .75], [77, .25], [76, 1], [72, 1], [74, 1], [72, 3]];
+  const RIFF = [[52, .5], [59, .5], [64, .5], [59, .5], [55, .5], [62, .5], [67, .5], [62, .5], [57, .5], [64, .5], [69, .5], [64, .5], [52, 1], [64, 1]];
+  const SOLO = [[76, .25], [79, .25], [81, .25], [83, .25], [86, .25], [88, .25], [86, .25], [83, .25], [81, .25], [83, .25], [86, .25], [88, .5], [91, 1.5]];
+  const sfx = {
+    catch() { tone(84, 0, .07, 'square', .04); tone(91, .05, .08, 'square', .03); },
+    gift() { play([[79, .25], [83, .25], [86, .25], [91, .75]], 480, 'square', .04); },
+    hit() { tone(40, 0, .25, 'sawtooth', .06); },
+    over() { play([[67, .5], [63, .5], [60, 1.5]], 200, 'triangle', .07); },
+  };
+
+  // ---------- party stage ----------
+  const scene = $('#scene'), sx = scene.getContext('2d');
+  const SW = 240, SH = 120, FLOOR = 112;
+  const hjl = new Actor('hjl', 20, FLOOR - 49), lili = new Actor('lili', 172, FLOOR - 49);
+  const CAKE = { x: 106, top: 72, base: 86, candles: [111, 119, 127] };
+  const party = { candlesLit: true, spot: 0, spotTarget: 0, notes: false, busy: false, pointer: null };
+  const parts = []; // confetti, music notes, smoke
+
+  const bg = document.createElement('canvas'); bg.width = SW; bg.height = SH;
+  (function paintBackdrop() {
+    const b = bg.getContext('2d');
+    b.fillStyle = C.plum; b.fillRect(0, 0, SW, SH);
+    b.fillStyle = '#33285a';
+    for (let y = 30; y < FLOOR; y += 8) for (let x = (y / 8) % 2 ? 4 : 0; x < SW; x += 8) b.fillRect(x, y, 1, 1);
+    // window with the moon, upper left
+    b.fillStyle = C.edge; b.fillRect(8, 26, 34, 30);
+    b.fillStyle = '#141034'; b.fillRect(10, 28, 30, 26);
+    b.fillStyle = C.edge; b.fillRect(24, 28, 2, 26); b.fillRect(10, 40, 30, 2);
+    b.fillStyle = C.ink; b.fillRect(14, 31, 6, 6); b.fillStyle = '#141034'; b.fillRect(17, 30, 4, 4);
+    // "LIVE" sign on the right wall (lit in draw)
+    // floor boards
+    b.fillStyle = '#5a3826'; b.fillRect(0, FLOOR, SW, SH - FLOOR);
+    b.fillStyle = '#6f4630'; b.fillRect(0, FLOOR, SW, 1);
+    b.fillStyle = '#47291c'; for (let x = 6; x < SW; x += 22) b.fillRect(x, FLOOR + 2, 1, SH - FLOOR - 2);
+    b.fillStyle = C.edge; b.fillRect(0, FLOOR - 1, SW, 1);
+    // bunting
+    const colors = [C.berry, C.candle, C.mint, C.lilac];
+    b.fillStyle = C.edge;
+    for (let x = 0; x < SW; x++) b.fillRect(x, Math.round(5 + 4 * Math.sin(Math.PI * x / SW * 2)), 1, 1);
+    for (let k = 0, x = 3; x < SW - 6; x += 12, k++) {
+      const y = Math.round(5 + 4 * Math.sin(Math.PI * (x + 4) / SW * 2)) + 1;
+      b.fillStyle = colors[k % 4];
+      for (let r = 0; r < 7; r++) b.fillRect(x + Math.floor(r / 2), y + r, 8 - 2 * Math.floor(r / 2), 1);
+    }
+    // table
+    b.fillStyle = C.edge; b.fillRect(97, 85, 46, 4); b.fillRect(100, 89, 3, FLOOR - 89); b.fillRect(137, 89, 3, FLOOR - 89);
+    b.fillStyle = '#f2e6cf'; b.fillRect(98, 86, 44, 2);
+    b.fillStyle = C.berry; for (let x = 98; x < 142; x += 4) b.fillRect(x, 88, 2, 3);
+  })();
+
+  const LIGHTS = Array.from({ length: 23 }, (_, k) => {
+    const x = 6 + k * 10;
+    return { x, y: Math.round(17 + 5 * Math.sin(Math.PI * x / SW)), c: [C.candle, C.berry, C.mint, C.pink][k % 4], on: Math.random() > .3 };
+  });
+  const LIVE = ['x...x.x...x.xxx', 'x...x.x...x.x..', 'x...x..x.x..xx.', 'x...x..x.x..x..', 'xxx.x...x...xxx'];
+
+  function drawCake(ctx, t) {
+    const { x, top, base } = CAKE;
+    ctx.fillStyle = C.edge; ctx.fillRect(x - 1, top - 1, 30, base - top + 1);
+    ctx.fillStyle = '#fff1d6'; ctx.fillRect(x, top + 4, 28, base - top - 4);
+    ctx.fillStyle = C.pink; ctx.fillRect(x, top, 28, 5);
+    for (let i = 0; i < 28; i += 5) ctx.fillRect(x + i, top + 5, 2, 2 + (i % 3));
+    ctx.fillStyle = C.berry; for (let i = 3; i < 28; i += 6) ctx.fillRect(x + i, top + 10, 2, 2);
+    ctx.fillStyle = '#f07aa0'; ctx.fillRect(x, base - 3, 28, 2);
+    for (const cx of CAKE.candles) {
+      ctx.fillStyle = C.edge; ctx.fillRect(cx - 1, top - 8, 4, 8);
+      ctx.fillStyle = cx % 2 ? C.mint : C.lilac; ctx.fillRect(cx, top - 7, 2, 7);
+      if (party.candlesLit) {
+        const f = Math.floor(t / 120 + cx) % 3;
+        ctx.fillStyle = C.candle; ctx.fillRect(cx, top - 11 + (f === 1 ? -1 : 0), 2, 3 + (f === 1 ? 1 : 0));
+        ctx.fillStyle = '#fff6c8'; ctx.fillRect(cx + (f === 2 ? 1 : 0), top - 10, 1, 1);
+      }
+    }
+  }
+
+  function drawScene(t) {
+    sx.imageSmoothingEnabled = false;
+    sx.drawImage(bg, 0, 0);
+    for (const L of LIGHTS) {
+      if (!reduceMotion && Math.random() < 0.012) L.on = !L.on;
+      sx.fillStyle = L.on ? L.c : '#4a3d66'; sx.fillRect(L.x, L.y, 2, 2);
+      if (L.on) { sx.fillStyle = 'rgba(255,240,200,.18)'; sx.fillRect(L.x - 1, L.y - 1, 4, 4); }
+    }
+    const liveOn = reduceMotion || Math.floor(t / 900) % 5 !== 0;
+    LIVE.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === 'x') { sx.fillStyle = liveOn ? C.mint : '#3c5a5a'; sx.fillRect(186 + i, 30 + j, 1, 1); } }));
+    // balloons bobbing by the table
+    const bob = reduceMotion ? 0 : Math.round(Math.sin(t / 600));
+    for (const [bx, by, col] of [[150, 40, C.berry], [158, 46, C.mint]]) {
+      sx.fillStyle = C.edge; sx.fillRect(bx - 1, by - 1 + bob, 9, 11); sx.fillRect(bx + 3, by + 10 + bob, 1, 30);
+      sx.fillStyle = col; sx.fillRect(bx, by + bob, 7, 9); sx.fillStyle = 'rgba(255,255,255,.5)'; sx.fillRect(bx + 1, by + 1 + bob, 2, 2);
+    }
+    drawCake(sx, t);
+    sx.drawImage(hjl.image(), hjl.x, hjl.y);
+    sx.drawImage(lili.image(), lili.x, lili.y);
+    if (hjl.anim === 'hug') sx.drawImage(sprite('hjl', 'hugArm', hjl.i), hjl.x, hjl.y); // HJL's arm wraps over LILI's back
+    // spotlight for the solo
+    party.spot += (party.spotTarget - party.spot) * 0.08;
+    if (party.spot > 0.02) {
+      sx.save();
+      sx.fillStyle = `rgba(8,5,20,${(0.62 * party.spot).toFixed(3)})`;
+      sx.beginPath(); sx.rect(0, 0, SW, SH);
+      sx.ellipse(hjl.x + 24, FLOOR - 26, 32, 52, 0, 0, Math.PI * 2);
+      sx.fill('evenodd');
+      sx.fillStyle = `rgba(255,236,190,${(0.16 * party.spot).toFixed(3)})`;
+      sx.beginPath(); sx.moveTo(hjl.x + 14, 0); sx.lineTo(hjl.x + 34, 0); sx.lineTo(hjl.x + 56, FLOOR); sx.lineTo(hjl.x - 8, FLOOR); sx.fill();
+      sx.restore();
+    }
+    for (const p of parts) {
+      if (p.kind === 'note') sx.drawImage(ART.musicNote, Math.round(p.x), Math.round(p.y));
+      else { sx.fillStyle = p.c; sx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h); }
+    }
+  }
+
+  function updateParts(dt) {
+    const s = dt / 1000;
+    for (let k = parts.length - 1; k >= 0; k--) {
+      const p = parts[k];
+      p.life -= s;
+      if (p.kind === 'confetti') { p.vy += 70 * s; p.vx *= 0.99; p.w = (Math.floor(p.life * 8) % 2) ? 2 : 1; }
+      if (p.kind === 'note') { p.vx = 10 * Math.sin(p.life * 5); }
+      if (p.kind === 'smoke') { p.w = p.h = Math.min(4, p.w + s * 3); }
+      p.x += p.vx * s; p.y += p.vy * s;
+      if (p.life <= 0 || p.y > SH) parts.splice(k, 1);
+    }
+  }
+  function confetti(n, x0, y0) {
+    if (reduceMotion) n = Math.min(n, 12);
+    const cols = [C.berry, C.candle, C.mint, C.pink, C.lilac, C.ink];
+    for (let k = 0; k < n; k++) parts.push({ kind: 'confetti', x: x0 ?? rand(0, SW), y: y0 ?? rand(-20, 0), vx: rand(-60, 60), vy: rand(-80, 10), c: pick(cols), w: 2, h: 2, life: rand(2, 3.5) });
+  }
+  let noteTimer = 0;
+  function tickNotes(dt) {
+    if (!party.notes || reduceMotion) return;
+    noteTimer -= dt;
+    if (noteTimer <= 0) { noteTimer = 260; parts.push({ kind: 'note', x: hjl.x + rand(30, 40), y: hjl.y + 22, vx: 0, vy: -22, life: 1.8 }); }
+  }
+
+  // speech bubbles, anchored above each head
+  function placeBubble(el, actor, w, h, side) {
+    el.style.left = ((actor.x + 24) / w * 100) + '%';
+    el.style.top = ((actor.y + 4) / h * 100) + '%';
+    el.style.setProperty('--tx', side === 'left' ? '-22%' : side === 'right' ? '-78%' : '-50%');
+    el.style.setProperty('--tail', side === 'left' ? '22%' : side === 'right' ? '78%' : '50%');
+  }
+  const bubbles = { hjl: $('#bub-hjl'), lili: $('#bub-lili'), game: $('#bub-game') };
+  const bubbleTimers = {};
+  function say(key, text, ms = 2200) {
+    const el = bubbles[key];
+    el.textContent = text; el.hidden = false;
+    clearTimeout(bubbleTimers[key]);
+    bubbleTimers[key] = setTimeout(() => { el.hidden = true; }, ms);
+  }
+
+  // ---------- the acts ----------
+  const actButtons = ['#act-play', '#act-solo', '#act-cake'].map((s) => $(s));
+  async function stage(fn) {
+    if (party.busy) return;
+    party.busy = true; actButtons.forEach((b) => { b.disabled = true; });
+    hjl.look = lili.look = null;
+    try { await fn(); } finally { party.busy = false; actButtons.forEach((b) => { b.disabled = false; }); }
+  }
+  const serenade = () => stage(async () => {
+    say('hjl', '这首歌，送给今天的我自己！', 2400);
+    play(RIFF, 300, 'sawtooth', 0.03);
+    party.notes = true;
+    const playing = hjl.act('shred', 6);
+    await sleep(1100);
+    say('lili', '大晚上的，吵死了！', 1900);
+    await lili.act('rant', 2);
+    say('lili', '你这弹的什么玩意儿？', 1900);
+    await lili.act('point', 1);
+    await playing; party.notes = false;
+    say('lili', '……其实还挺好听。生日快乐。', 3200);
+    await lili.act('wave', 3);
+  });
+  const solo = () => stage(async () => {
+    party.spotTarget = 1; party.notes = true;
+    say('hjl', 'SOLO 时间到！', 1800);
+    play(SOLO, 420, 'square', 0.04);
+    const shredding = hjl.act('solo', 4);
+    await sleep(1600);
+    say('lili', '臭中分，你弹nmlgb', 2400);
+    await lili.act('rant', 2);
+    await shredding;
+    party.spotTarget = 0; party.notes = false;
+    confetti(40, hjl.x + 24, hjl.y);
+    say('hjl', '谢谢！谢谢大家！', 1800);
+    await hjl.act('wave', 2);
+  });
+  const blowCandles = () => stage(async () => {
+    if (!party.candlesLit) return;
+    hjl.lookAt(CAKE.x + 14, CAKE.top); lili.lookAt(CAKE.x + 14, CAKE.top);
+    say('hjl', '先许个愿……', 1800);
+    await sleep(1900);
+    party.candlesLit = false;
+    for (const cx of CAKE.candles) for (let k = 0; k < 3; k++) parts.push({ kind: 'smoke', x: cx, y: CAKE.top - 10 - k * 3, vx: rand(-3, 3), vy: -8, c: 'rgba(238,241,245,.7)', w: 2, h: 2, life: 1.4 + k * 0.3 });
+    hjl.look = lili.look = null;
+    play(HAPPY_BIRTHDAY, 170, 'square', 0.045);
+    confetti(reduceMotion ? 12 : 140);
+    const h1 = $('#headline'); h1.classList.remove('cheer'); void h1.offsetWidth; if (!reduceMotion) h1.classList.add('cheer');
+    say('lili', '生日快乐啦！', 2000);
+    const homeX = lili.x;
+    lili.act('runLeft', Infinity);
+    await lili.moveTo(hjl.x + 20, 1100);
+    const hugging = Promise.all([hjl.act('hug', 5), lili.act('hug', 5)]);
+    if (!reduceMotion) for (let k = 0; k < 8; k++) parts.push({ kind: 'confetti', x: hjl.x + rand(24, 44), y: hjl.y + rand(0, 10), vx: rand(-20, 20), vy: rand(-50, -20), c: C.pink, w: 2, h: 2, life: 1.6 });
+    await sleep(1400);
+    say('hjl', '谢谢！今天我最大！', 2200);
+    await hugging;
+    say('lili', '……就今天啊。', 2000);
+    lili.act('runRight', Infinity);
+    await lili.moveTo(homeX, 1100);
+    lili.act('idle', 1);
+    setTimeout(() => { party.candlesLit = true; }, 5000);
+  });
+  $('#act-play').addEventListener('click', serenade);
+  $('#act-solo').addEventListener('click', solo);
+  $('#act-cake').addEventListener('click', blowCandles);
+
+  function sceneXY(e) {
+    const r = scene.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width * SW, (e.clientY - r.top) / r.height * SH];
+  }
+  const inside = (a, x, y) => x >= a.x + 8 && x <= a.x + 40 && y >= a.y + 2 && y <= a.y + 50;
+  scene.addEventListener('pointermove', (e) => { party.pointer = sceneXY(e); });
+  scene.addEventListener('pointerleave', () => { party.pointer = null; hjl.look = lili.look = null; });
+  scene.addEventListener('click', (e) => {
+    if (party.busy) return;
+    const [x, y] = sceneXY(e);
+    if (inside(hjl, x, y)) {
+      stage(async () => { say('hjl', pick(['来了家人们', '出来不，家人们', '上号！']), 2000); await hjl.act('wave', 2); });
+    } else if (inside(lili, x, y)) {
+      const [line, anim, loops] = pick([['臭泔水，你点你妈', 'point', 1], ['别碰老子你妈了个逼的', 'rant', 2], ['家人来一根', 'offer', 2]]);
+      stage(async () => { say('lili', line, 2200); await lili.act(anim, loops); });
+    }
+  });
+
+  // ---------- catch game ----------
+  const game = $('#game'), gx = game.getContext('2d');
+  const GW = 240, GH = 180, GFLOOR = 172;
+  const gHjl = new Actor('hjl', 96, GFLOOR - 49), gLili = new Actor('lili', 186, 54 - 49);
+  const G = { state: 'ready', score: 0, best: store.get('hjl-party-best', 0), lives: 3, items: [], pops: [], keys: { l: false, r: false }, target: null, spawn: 0, throwT: 1.5, melt: 0, nextMelt: 25, heartT: 0, flash: 0 };
+  const VALUE = { cake: 1, note: 1, gift: 3, heart: 2 };
+  const stars = Array.from({ length: 34 }, () => ({ x: Math.floor(rand(0, GW)), y: Math.floor(rand(0, 110)), p: rand(0, 6) }));
+  const overlay = $('#overlay'), scoreEl = $('#score'), bestEl = $('#best'), livesEl = $('#lives');
+  bestEl.textContent = G.best;
+
+  function hud() {
+    scoreEl.textContent = G.score; bestEl.textContent = G.best;
+    [...livesEl.children].forEach((h, k) => h.classList.toggle('gone', k >= G.lives));
+  }
+  function startGame() {
+    Object.assign(G, { state: 'play', score: 0, lives: 3, items: [], pops: [], spawn: 0.4, throwT: 1.6, melt: 0, nextMelt: 25, heartT: 0, flash: 0, target: null });
+    gHjl.x = 96;
+    for (const [a, anim] of [[gHjl, 'idle'], [gLili, 'rant']]) { a.finish(false); Object.assign(a, { anim, i: 0, t: 0, loops: Infinity }); }
+    overlay.hidden = true; bubbles.game.hidden = true; hud();
+    game.focus({ preventScroll: true });
+  }
+  function endGame() {
+    G.state = 'over';
+    const record = G.score > G.best;
+    if (record) { G.best = G.score; store.set('hjl-party-best', G.best); }
+    hud(); sfx.over();
+    gHjl.act('failed', 1);
+    gLili.act('failed', 1);
+    say('game', '哈！砸中了吧！', 2000);
+    setTimeout(() => {
+      $('#ov-title').textContent = `得分 ${G.score}`;
+      $('#ov-text').textContent = record ? '新纪录！LILI 嘴上不服，心里服了。' : G.score >= 25 ? 'LILI 都被你接心软了。' : '这局 LILI 赢了。再来一局？';
+      $('#start').textContent = '再来一局';
+      overlay.hidden = false;
+    }, 1300);
+  }
+  function spawnItem() {
+    const r = Math.random();
+    const kind = r < 0.55 ? 'cake' : r < 0.9 ? 'note' : 'gift';
+    G.items.push({ kind, x: rand(4, GW - 64), y: -10, vx: 0, vy: 34 + G.score * 0.8 + rand(0, 14) });
+  }
+  function throwAnger() {
+    const x0 = gLili.x + 10, y0 = 26, tx = gHjl.x + 24 + rand(-34, 34), T = Math.max(1.05, 1.7 - G.score * 0.012);
+    G.items.push({ kind: 'anger', x: x0, y: y0, vx: (tx - x0) / T, vy: -24, g: 2 * ((GFLOOR - 30 - y0) + 24 * T) / (T * T) });
+  }
+  function updateGame(dt) {
+    const s = dt / 1000;
+    for (const p of G.pops) { p.y -= 18 * s; p.life -= s; }
+    G.pops = G.pops.filter((p) => p.life > 0);
+    G.flash = Math.max(0, G.flash - s);
+    if (G.state !== 'play') return;
+    let dir = (G.keys.r ? 1 : 0) - (G.keys.l ? 1 : 0);
+    if (!dir && G.target != null) { const d = G.target - (gHjl.x + 24); if (Math.abs(d) > 3) dir = Math.sign(d); }
+    gHjl.x = Math.max(-6, Math.min(GW - 42, gHjl.x + dir * 115 * s));
+    gHjl.loop(dir > 0 ? 'runRight' : dir < 0 ? 'runLeft' : 'idle');
+
+    if ((G.spawn -= s) <= 0) { spawnItem(); G.spawn = Math.max(0.38, 1.05 - G.score * 0.012); }
+    if (G.melt > 0) {
+      G.melt -= s;
+      if ((G.heartT -= s) <= 0) { G.heartT = 0.35; G.items.push({ kind: 'heart', x: gLili.x + 6, y: 24, vx: rand(-70, -20), vy: -10, g: 60 }); }
+      if (G.melt <= 0) gLili.loop('point');
+    } else {
+      gLili.loop(G.score < 15 ? 'rant' : 'point');
+      if ((G.throwT -= s) <= 0) { throwAnger(); G.throwT = Math.max(0.7, 1.9 - G.score * 0.025); }
+      if (G.score >= G.nextMelt) {
+        G.melt = 4.5; G.nextMelt += 40; G.items = G.items.filter((it) => it.kind !== 'anger');
+        gLili.act('wave', 7).then(() => gLili.loop('point'));
+        say('game', '……行吧，生日快乐。', 2600);
+      }
+    }
+    const box = { l: gHjl.x + 10, r: gHjl.x + 38, t: gHjl.y + 16, b: gHjl.y + 40 };
+    for (const it of G.items) {
+      if (it.g) it.vy += it.g * s;
+      it.x += it.vx * s; it.y += it.vy * s;
+      const a = ART[it.kind], cx = it.x + a.width / 2, cy = it.y + a.height / 2;
+      if (cx > box.l && cx < box.r && cy > box.t && cy < box.b) {
+        it.dead = true;
+        if (it.kind === 'anger') {
+          G.lives--; G.flash = 0.35; sfx.hit();
+          G.pops.push({ x: cx, y: cy, text: 'OUCH', c: '#ff3b30', life: 0.9 });
+          if (G.lives <= 0) { hud(); endGame(); return; }
+        } else {
+          G.score += VALUE[it.kind];
+          G.pops.push({ x: cx, y: cy, text: '+' + VALUE[it.kind], c: it.kind === 'gift' ? C.mint : C.candle, life: 0.8 });
+          it.kind === 'gift' ? sfx.gift() : sfx.catch();
+        }
+        hud();
+      }
+      if (it.y > GH) it.dead = true;
+    }
+    G.items = G.items.filter((it) => !it.dead);
+  }
+  function drawGame(t) {
+    gx.imageSmoothingEnabled = false;
+    gx.fillStyle = '#141034'; gx.fillRect(0, 0, GW, GH);
+    gx.fillStyle = '#1d1645'; gx.fillRect(0, 70, GW, 50); gx.fillStyle = C.plum; gx.fillRect(0, 120, GW, GFLOOR - 120);
+    for (const st of stars) { gx.fillStyle = (reduceMotion || Math.sin(t / 500 + st.p) > -0.3) ? C.ink : '#4a3d66'; gx.fillRect(st.x, st.y, 1, 1); }
+    gx.fillStyle = C.ink; gx.fillRect(20, 14, 9, 9); gx.fillStyle = '#141034'; gx.fillRect(24, 12, 7, 7);
+    gx.fillStyle = '#5a3826'; gx.fillRect(0, GFLOOR, GW, GH - GFLOOR); gx.fillStyle = C.edge; gx.fillRect(0, GFLOOR - 1, GW, 1);
+    gx.fillStyle = C.edge; gx.fillRect(176, 53, 64, 6); gx.fillStyle = '#6f4630'; gx.fillRect(177, 54, 63, 3);
+    gx.drawImage(gLili.image(), gLili.x, gLili.y);
+    for (const it of G.items) gx.drawImage(ART[it.kind], Math.round(it.x), Math.round(it.y));
+    gx.drawImage(gHjl.image(), Math.round(gHjl.x), gHjl.y);
+    gx.font = '700 9px "Pixelify Sans", monospace'; gx.textAlign = 'center';
+    for (const p of G.pops) { gx.fillStyle = C.edge; gx.fillText(p.text, Math.round(p.x) + 1, Math.round(p.y) + 1); gx.fillStyle = p.c; gx.fillText(p.text, Math.round(p.x), Math.round(p.y)); }
+    if (G.flash > 0) { gx.fillStyle = `rgba(229,72,62,${(G.flash * 0.9).toFixed(2)})`; gx.fillRect(0, 0, GW, GH); }
+  }
+
+  $('#start').addEventListener('click', startGame);
+  const KEYS = { ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r' };
+  window.addEventListener('keydown', (e) => { const k = KEYS[e.key]; if (k && G.state === 'play') { G.keys[k] = true; e.preventDefault(); } });
+  window.addEventListener('keyup', (e) => { const k = KEYS[e.key]; if (k) G.keys[k] = false; });
+  window.addEventListener('blur', () => { G.keys.l = G.keys.r = false; });
+  function gameX(e) { const r = game.getBoundingClientRect(); return (e.clientX - r.left) / r.width * GW; }
+  game.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || e.buttons) G.target = gameX(e); });
+  game.addEventListener('pointerdown', (e) => { G.target = gameX(e); });
+  game.addEventListener('pointerleave', () => { G.target = null; });
+  game.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') G.target = null; });
+  for (const [id, k] of [['#pad-l', 'l'], ['#pad-r', 'r']]) {
+    const b = $(id);
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); G.keys[k] = true; });
+    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => { G.keys[k] = false; });
+  }
+  $('#legend').innerHTML = '';
+  for (const [kind, text] of [['cake', '蛋糕 +1'], ['note', '音符 +1'], ['gift', '礼物 +3'], ['heart', 'LILI 的心 +2'], ['anger', '怒气：扣一条命']]) {
+    const li = document.createElement('li'), c = document.createElement('canvas'), a = ART[kind];
+    c.width = 11; c.height = 11; c.getContext('2d').drawImage(a, Math.floor((11 - a.width) / 2), Math.floor((11 - a.height) / 2));
+    li.append(c, document.createTextNode(text)); $('#legend').append(li);
+  }
+
+  // ---------- take-home pets ----------
+  const SHOWS = {
+    hjl: [['idle', '待机'], ['shred', '干活时'], ['solo', '任务完成'], ['failed', '出错了'], ['wave', '打招呼']],
+    lili: [['idle', '待机'], ['rant', '干活时'], ['point', '任务完成'], ['failed', '出错了'], ['offer', '发烟'], ['wave', '比心']],
+  };
+  const previews = ['hjl', 'lili'].map((who) => ({ who, actor: new Actor(who, 0, 0), cv: $('#pv-' + who), label: $('#pv-' + who + '-label'), k: -1 }));
+  function nextShow(p) {
+    p.k = (p.k + 1) % SHOWS[p.who].length;
+    const [anim, label] = SHOWS[p.who][p.k];
+    p.label.textContent = label;
+    p.actor.act(anim, anim === 'idle' ? 3 : 2).then((ok) => { if (ok) nextShow(p); });
+  }
+  previews.forEach(nextShow);
+
+  function b64Bytes(b64) { const s = atob(b64), out = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i); return out; }
+  async function download(key, btn) {
+    const pack = window.PET_PACKS && window.PET_PACKS[key], status = $('#st-' + key);
+    if (!pack) { status.textContent = '安装包没加载出来，刷新页面再试一次。'; return; }
+    const bytes = b64Bytes(pack.b64);
+    if (window.claude && typeof window.claude.use === 'function') { // inside claude.ai: the viewer confirms the save
+      btn.disabled = true;
+      try {
+        const dl = await window.claude.use('downloads');
+        if (!dl) { status.textContent = '这个打开方式不能下载。请在 claude.ai 里打开这个页面，或者找 HJL 要压缩包。'; return; }
+        await dl.save({ filename: pack.filename, data: bytes });
+        status.textContent = `已保存 ${pack.filename}，按下面三步装上。`;
+      } catch (e) {
+        status.textContent = e && e.code === 'declined' ? '已取消下载。' : e && e.code === 'rate_limited' ? '已经有一个下载在等你确认了。' : '下载没成功，请稍后再试。';
+      } finally { btn.disabled = false; }
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/zip' }));
+    const a = document.createElement('a'); a.href = url; a.download = pack.filename;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    status.textContent = `开始下载 ${pack.filename}，按下面三步装上。`;
+  }
+  document.querySelectorAll('[data-pack]').forEach((b) => b.addEventListener('click', () => download(b.dataset.pack, b)));
+
+  // ---------- one clock for everything ----------
+  let last = performance.now(), ambient = 6000;
+  function frame(now) {
+    const dt = Math.min(50, now - last); last = now;
+    hjl.update(dt); lili.update(dt); gHjl.update(dt); gLili.update(dt);
+    previews.forEach((p) => p.actor.update(dt));
+    if (!party.busy && party.pointer) { hjl.lookAt(...party.pointer); lili.lookAt(...party.pointer); }
+    if (!party.busy && !party.pointer && (ambient -= dt) <= 0) { // a small idle moment now and then
+      ambient = rand(7000, 12000);
+      if (Math.random() < 0.5) lili.act('waiting', 1); else hjl.lookAt(lili.x + 24, lili.y + 18), setTimeout(() => { if (!party.busy && !party.pointer) hjl.look = null; }, 1500);
+    }
+    updateParts(dt); tickNotes(dt); updateGame(dt);
+    drawScene(now); drawGame(now);
+    previews.forEach((p) => { const c = p.cv.getContext('2d'); c.clearRect(0, 0, 48, 52); c.drawImage(p.actor.image(), 0, 0); });
+    placeBubble(bubbles.hjl, hjl, SW, SH, 'left');
+    placeBubble(bubbles.lili, lili, SW, SH, 'right');
+    placeBubble(bubbles.game, gLili, GW, GH, 'right');
+    requestAnimationFrame(frame);
+  }
+  if (!reduceMotion) setTimeout(() => confetti(60), 400);
+  requestAnimationFrame(frame);
+})();
+</script>
